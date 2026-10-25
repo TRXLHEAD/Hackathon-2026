@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Вход — Куда уходят деньги</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-body">
+<main class="auth">
+  <svg class="auth-paper under" aria-hidden="true">
+    <defs><filter id="pg-blur" x="-10%" y="-5%" width="130%" height="110%"><feGaussianBlur stdDeviation="9"/></filter></defs>
+    <path id="pg-shadow" fill="rgba(60,4,16,.34)" filter="url(#pg-blur)"/>
+  </svg>
+  <aside class="auth-side">
+    <h1>Видно, куда уходят деньги и хватит ли их на месяцы вперёд</h1>
+    <ul class="auth-points">
+      <li><b>1</b> Загрузите выгрузку операций из банка</li>
+      <li><b>2</b> Посмотрите, на что тратятся деньги</li>
+      <li><b>3</b> Узнайте, будет ли кассовый разрыв в ближайшие 30 дней</li>
+    </ul>
+    <div class="auth-art" aria-hidden="true">
+      <svg viewBox="0 0 360 150" role="img" shape-rendering="geometricPrecision">
+        <g stroke="#fff" stroke-opacity=".18">
+          <line x1="0" y1="30" x2="360" y2="30"/><line x1="0" y1="60" x2="360" y2="60"/>
+          <line x1="0" y1="90" x2="360" y2="90"/>
+        </g>
+        <line x1="0" y1="118" x2="360" y2="118" stroke="#ffd2da" stroke-width="1.5" stroke-dasharray="6 4"/>
+        <polygon points="0,84 60,70 120,80 180,52 240,60 300,30 360,14 360,112 300,100 240,96 180,92 120,98 60,88 0,92" fill="#fff" fill-opacity=".22"/>
+        <polyline class="line" points="0,88 60,78 120,88 180,70 240,76 300,62 360,52" fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="square" pathLength="1"/>
+        <g fill="#fff" class="pts">
+          <rect x="56" y="74" width="8" height="8"/><rect x="116" y="84" width="8" height="8"/>
+          <rect x="176" y="66" width="8" height="8"/><rect x="236" y="72" width="8" height="8"/>
+          <rect x="296" y="58" width="8" height="8"/><rect x="352" y="44" width="10" height="10"/>
+        </g>
+      </svg>
+      <span>Коридор прогноза остатка и вероятность разрыва</span>
+    </div>
+  </aside>
+  <svg class="auth-paper over" aria-hidden="true">
+    <defs>
+      <filter id="pg-blur2" x="-30%" y="-5%" width="160%" height="110%"><feGaussianBlur stdDeviation="5"/></filter>
+      <linearGradient id="pg-back" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#fff8f8"/><stop offset=".55" stop-color="#ffe6ea"/>
+        <stop offset=".9" stop-color="#f3bcc6"/><stop offset="1" stop-color="#e59aa8"/>
+      </linearGradient>
+    </defs>
+    <path id="pg-flap-shadow" fill="rgba(40,0,10,.5)" filter="url(#pg-blur2)"/>
+    <path id="pg-flap" fill="url(#pg-back)"/>
+    <path id="pg-tip" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1"/>
+  </svg>
+
+  <section class="auth-card">
+    <div class="tabs" role="tablist">
+      <button class="tab active" id="tab-login" role="tab" aria-selected="true">Вход</button>
+      <button class="tab" id="tab-register" role="tab" aria-selected="false">Регистрация</button>
+    </div>
+
+    <form id="form" autocomplete="on" novalidate>
+      <label class="field">Логин
+        <input type="text" id="username" name="username" autocomplete="username" placeholder="например, ivanov" required autofocus>
+      </label>
+      <label class="field">Пароль
+        <span class="pw">
+          <input type="password" id="password" name="password" autocomplete="current-password" placeholder="не короче 4 символов" required>
+          <button type="button" class="pw-toggle" id="pw-toggle" aria-label="Показать пароль">Показать</button>
+        </span>
+      </label>
+      <label class="field" id="repeat-wrap" hidden>Повторите пароль
+        <input type="password" id="password2" autocomplete="new-password" placeholder="ещё раз тот же пароль">
+      </label>
+      <p class="hint err" id="msg" role="alert"></p>
+      <button class="btn primary big full" id="submit" type="submit">Войти</button>
+    </form>
+  </section>
+</main>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  let mode = {{ 'true' if first_user else 'false' }} ? 'register' : 'login';
+
+  function setMode(m){
+    mode = m;
+    const reg = m === 'register';
+    $('tab-login').classList.toggle('active', !reg);
+    $('tab-register').classList.toggle('active', reg);
+    $('tab-login').setAttribute('aria-selected', !reg);
+    $('tab-register').setAttribute('aria-selected', reg);
+    $('repeat-wrap').hidden = !reg;
+    $('submit').textContent = reg ? 'Создать аккаунт' : 'Войти';
+    $('password').autocomplete = reg ? 'new-password' : 'current-password';
+    $('msg').textContent = '';
+  }
+  $('tab-login').onclick = () => setMode('login');
+  $('tab-register').onclick = () => setMode('register');
+  $('pw-toggle').onclick = () => {
+    const show = $('password').type === 'password';
+    $('password').type = show ? 'text' : 'password';
+    $('pw-toggle').textContent = show ? 'Скрыть' : 'Показать';
+  };
+  setMode(mode);
+
+  $('form').onsubmit = async e => {
+    e.preventDefault();
+    const msg = $('msg'); msg.className = 'hint err'; msg.textContent = '';
+    const username = $('username').value.trim(), password = $('password').value;
+    if (!username || !password) { msg.textContent = 'Введите логин и пароль.'; return; }
+    if (mode === 'register' && password !== $('password2').value) { msg.textContent = 'Пароли не совпадают.'; return; }
+    $('submit').disabled = true;
+    try {
+      const r = await fetch('/api/auth/' + mode, {method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username, password})});
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'Ошибка');
+      if (mode === 'register') {
+        setMode('login');
+        $('password').value = ''; $('password2').value = '';
+        msg.className = 'hint ok'; msg.textContent = 'Аккаунт создан. Теперь войдите.';
+        $('submit').disabled = false; $('password').focus();
+        return;
+      }
+      location.href = '/';
+    } catch (err) {
+      msg.textContent = err instanceof TypeError ? 'Нет связи с сервером.' : err.message;
+      $('submit').disabled = false;
+    }
+  };
+})();
+
+// Красная панель — «страница». Её правый край загибается следом за курсором,
+// как у перелистываемого листа: сгиб, отворот с обратной стороной и тень на форме.
+(function(){
+  const side = document.querySelector('.auth-side');
+  if (!side) return;
+  const $ = id => document.getElementById(id);
+  const shadow = $('pg-shadow'), flap = $('pg-flap'), flapShadow = $('pg-flap-shadow'), tip = $('pg-tip');
+  const stacked = matchMedia('(max-width:980px)');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const N = 56, clamp = (v, a, b) => Math.min(Math.max(v, a), b);
+  // курсор слева — лист отогнут сильнее, справа — лежит почти ровно
+  const st = {x: reduce ? .5 : 0, y: .5, vx: 0, vy: 0}, tg = {x: .5, y: .5};
+  let raf = 0;
+
+  function render(){
+    if (stacked.matches) { side.style.clipPath = ''; return; }
+    const W = side.clientWidth, H = side.clientHeight;
+    const k = clamp(W / 720, .55, 1);
+    const turn = clamp(1 - st.x, 0, 1.2);
+    const pull = (12 + turn * 64) * k, fw = (5 + turn * 46) * k;
+    const cy = clamp(st.y, 0, 1) * H, sig = .34 * H;
+    const edge = [], back = [];
+    for (let i = 0; i <= N; i++) {
+      const y = i / N * H, g = Math.exp(-Math.pow((y - cy) / sig, 2));
+      const e = W - 3 - pull * (.3 + .7 * g);
+      edge.push([e, y]); back.push([e - fw * (.22 + .78 * g), y]);
+    }
+    const pts = a => a.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1));
+    side.style.clipPath = 'polygon(0 0,' + pts(edge).map(p => p.replace(' ', 'px ') + 'px').join(',') + ',0 ' + H + 'px)';
+    const line = a => 'M' + pts(a).join(' L');
+    const rev = back.slice().reverse();
+    shadow.setAttribute('d', 'M-40 0 L' + pts(edge.map(p => [p[0] + 7, p[1] + 3])).join(' L') + ' L-40 ' + H + ' Z');
+    const flapD = line(edge) + ' L' + pts(rev).join(' L') + ' Z';
+    flap.setAttribute('d', flapD);
+    flapShadow.setAttribute('d', line(back.map(p => [p[0] - 5, p[1] + 3])) + ' L' + pts(edge.map(p => [p[0] - 5, p[1] + 3]).reverse()).join(' L') + ' Z');
+    tip.setAttribute('d', line(back));
+    side.style.setProperty('--mx', clamp(st.x, 0, 1).toFixed(3));
+    side.style.setProperty('--my', clamp(st.y, 0, 1).toFixed(3));
+  }
+
+  function tick(){
+    st.vx = (st.vx + (tg.x - st.x) * .075) * .8;   // пружина: лист слегка «пружинит» и успокаивается
+    st.vy = (st.vy + (tg.y - st.y) * .1) * .72;
+    st.x += st.vx; st.y += st.vy;
+    render();
+    const rest = Math.abs(tg.x - st.x) + Math.abs(tg.y - st.y) + Math.abs(st.vx) * 8 + Math.abs(st.vy) * 8 < .002;
+    raf = rest ? 0 : requestAnimationFrame(tick);
+  }
+  const kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
+
+  render();
+  addEventListener('resize', render);
+  if (reduce) return;
+  addEventListener('pointermove', e => { tg.x = e.clientX / innerWidth; tg.y = e.clientY / innerHeight; kick(); });
+  kick();   // при открытии страница «падает» на место
+})();
+</script>
+</body>
+</html>
